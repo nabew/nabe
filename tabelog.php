@@ -28,19 +28,20 @@ $i=0;
 foreach ($phpQueryObj[".list-rst__rst-name-target"] as $li){
   $tenpo_name[$i] =  pq($li)->text(); // a要素の中のテキストを取得して表示
   $tenpo_url[$i] = pq($li)->attr('href');
-  //$tenpo_name[$j] =  pq($li)->find('a')->text();
 
   $i++;
 }
 
 //取得店舗数設定
-$list_num = 10;
+$list_num = 3;
 
 //店舗データ取得ここから-----------------
 $file_path = "tenpo_data.csv";
 
 $file = fopen( $file_path, "w" ); 
-$export_csv_title = array( "店舗ID", "店舗名", "ジャンル", "電話番号", "住所", "アクセス", "営業時間", "定休日", "予算（お店）", "予算（ユーザー）", "カード", "サービス料", "席数", "個室", "貸切", "禁煙", "駐車場", "空間", "携帯", "飲み放題メニュー", "コース", "ドリンク", "料理", "こんな時にオススメ", "ロケーション", "サービス", "お子様", "ホームページ", "オープン日" );
+$export_csv_title = array( 0 => "店舗ID", 1 => "店名", 2 => "ジャンル", 3 => "TEL・予約", 4 => "住所", 5 => "交通手段", 6 => "営業時間", 7 => "定休日", 8 => "予算(お店より)", 9 => "予算(ユーザーより)", 10 => "カード", 11 => "サービス料", 12 => "席数", 13 => "個室", 14 => "貸切", 15 => "禁煙・喫煙", 16 => "駐車場", 17 => "空間・設備", 18 => "携帯電話", 19 => "飲み放題コース", 20 => "コース", 21 => "ドリンク", 22 => "料理", 23 => "こんな時にオススメ", 24 => "ロケーション", 25 => "サービス", 26 => "お子様", 27 => "ホームページ", 28 => "オープン日" );
+$count = count($export_csv_title);
+
 foreach( $export_csv_title as $key => $val ){             
   $export_header[] = mb_convert_encoding($val, 'SJIS-win', 'UTF-8');
 }
@@ -52,15 +53,27 @@ for($j=0;$j<$list_num;$j++){
 
   $k=1;
   $data[0] = $j+1;
-  foreach ($phpQueryObj[".rst-data"]->find('td') as $li2) {
-      $data[$k] = pq($li2)->text();
-      $k++;
+  foreach ($phpQueryObj[".rst-data"]->find('tr') as $li2) {
+    $title = pq($li2)->find('th')->text();
+    $num = array_search($title, $export_csv_title);
+    if($num){
+      $tmp = pq($li2)->find('td')->text();
+      $data[$num] = $tmp;
+    }
   }
+  for($n=0;$n<$count;$n++){
+    if(!$data[$n]){
+      $data[$n] = "";
+    }else{
+    }
+  }
+  ksort($data);
   foreach( $data as $key2 => $val2 ){             
     $val2 = preg_replace("/( |　)/", "", $val2 );
     $list[] = mb_convert_encoding($val2, 'SJIS-win', 'UTF-8');
   }
   fputcsv($file, $list);
+  $data = "";
   $list = "";
 }
 fclose($file);
@@ -95,6 +108,11 @@ for($j=0;$j<$list_num;$j++){
   $i=0;
   foreach ($phpQueryObj[".rvw-item__rvwr-data"] as $li) {
     if($i<5){
+      //$tmp = pq($li)->text();
+      //preg_match("/（.*/", $tmp, $matches);
+      //$tmp = str_replace($matches[0], "", $tmp);
+      //$tmp = preg_replace("/( |　)/", "", $tmp );
+      //$kutikomi[$i][name] = $tmp;
       $kutikomi[$i][name] = pq($li)->text();
       $i++;
     }
@@ -102,12 +120,12 @@ for($j=0;$j<$list_num;$j++){
   $i=0;
   foreach ($phpQueryObj[".rvw-item__rvwr-profile"] as $li) {
     if($i<5){
-      $kutikomi[$i][zoksei] = pq($li)->text();
+      $kutikomi[$i][zokusei] = pq($li)->text();
       $i++;
     }
   }
   $i=0;
-  foreach ($phpQueryObj[".rvw-item__contents"] as $li) {
+  foreach ($phpQueryObj[".rvw-item__rvw-comment"]->find('p') as $li) {
     if($i<5){
       $kutikomi[$i][kutikomi] = pq($li)->text();
       $i++;
@@ -121,6 +139,7 @@ for($j=0;$j<$list_num;$j++){
   }   
   $return = fputcsv($file, $list);
   $list = "";
+  $data = "";
 }
 fclose($file);
 $export_header = "";
@@ -217,6 +236,7 @@ for($j=0;$j<$list_num;$j++){
         }
         $return = fputcsv($file, $list);
         $list = "";
+        $data = "";
     }
     $i++;
   }
